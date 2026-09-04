@@ -1,6 +1,9 @@
 package com.sofram.shared.web;
 
 import jakarta.servlet.http.HttpServletRequest;
+import com.sofram.shared.exception.BusinessRuleException;
+import com.sofram.shared.exception.DuplicateResourceException;
+import com.sofram.shared.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -32,6 +35,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DisabledException.class)
     ResponseEntity<ApiError> handleDisabled(DisabledException exception, HttpServletRequest request) {
         return build(HttpStatus.FORBIDDEN, "Usuario inactivo", request, List.of());
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    ResponseEntity<ApiError> handleNotFound(ResourceNotFoundException exception, HttpServletRequest request) {
+        return build(HttpStatus.NOT_FOUND, exception.getMessage(), request, List.of());
+    }
+
+    @ExceptionHandler(DuplicateResourceException.class)
+    ResponseEntity<ApiError> handleDuplicate(DuplicateResourceException exception, HttpServletRequest request) {
+        return build(HttpStatus.CONFLICT, exception.getMessage(), request, List.of());
+    }
+
+    @ExceptionHandler(BusinessRuleException.class)
+    ResponseEntity<ApiError> handleBusinessRule(BusinessRuleException exception, HttpServletRequest request) {
+        return build(HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage(), request, List.of());
     }
 
     @ExceptionHandler(Exception.class)

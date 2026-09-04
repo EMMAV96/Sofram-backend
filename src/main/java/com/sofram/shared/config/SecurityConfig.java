@@ -38,7 +38,13 @@ public class SecurityConfig {
                         .authenticationEntryPoint(new RestAuthenticationEntryPoint(objectMapper))
                         .accessDeniedHandler(new RestAccessDeniedHandler(objectMapper)))
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/health", "/auth/login").permitAll()
+                        .requestMatchers(
+                                "/health",
+                                "/auth/login",
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
+                        ).permitAll()
                         .anyRequest().authenticated())
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
@@ -68,6 +74,6 @@ public class SecurityConfig {
 
     @Bean
     ObjectMapper objectMapper() {
-        return new ObjectMapper();
+        return new ObjectMapper().findAndRegisterModules();
     }
 }
