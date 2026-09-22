@@ -1,13 +1,7 @@
 package com.sofram.gestionmedica.application;
 
-import com.sofram.gestionmedica.domain.AtencionMedica;
-import com.sofram.gestionmedica.domain.Diagnostico;
-import com.sofram.gestionmedica.domain.Evaluacion;
-import com.sofram.gestionmedica.domain.Tratamiento;
-import com.sofram.gestionmedica.web.dto.AtencionMedicaResponse;
-import com.sofram.gestionmedica.web.dto.DiagnosticoResponse;
-import com.sofram.gestionmedica.web.dto.EvaluacionResponse;
-import com.sofram.gestionmedica.web.dto.TratamientoResponse;
+import com.sofram.gestionmedica.domain.*;
+import com.sofram.gestionmedica.web.dto.*;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -52,4 +46,15 @@ public class GestionMedicaMapper {
                 tratamiento.getDescripcion()
         );
     }
+
+    public MedicacionResponse toMedicacionResponse(Medicacion medicacion) {
+        return new MedicacionResponse(
+                medicacion.getId(),
+                medicacion.getDetalleHistoriaClinica().getId(),
+                medicacion.getNombre(),
+                medicacion.getDosis(),
+                medicacion.getFrecuencia()
+        );
+    }
+
 }
