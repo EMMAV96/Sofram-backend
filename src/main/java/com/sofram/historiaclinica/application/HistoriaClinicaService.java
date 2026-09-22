@@ -4,10 +4,7 @@ import com.sofram.historiaclinica.domain.DetalleHistoriaClinica;
 import com.sofram.historiaclinica.domain.HistoriaClinica;
 import com.sofram.historiaclinica.infrastructure.persistence.DetalleHistoriaClinicaRepository;
 import com.sofram.historiaclinica.infrastructure.persistence.HistoriaClinicaRepository;
-import com.sofram.historiaclinica.web.dto.DetalleHistoriaClinicaRequest;
-import com.sofram.historiaclinica.web.dto.DetalleHistoriaClinicaResponse;
-import com.sofram.historiaclinica.web.dto.HistoriaClinicaRequest;
-import com.sofram.historiaclinica.web.dto.HistoriaClinicaResponse;
+import com.sofram.historiaclinica.web.dto.*;
 import com.sofram.residente.application.ResidenteService;
 import com.sofram.residente.domain.Residente;
 import com.sofram.shared.exception.DuplicateResourceException;
@@ -140,7 +137,10 @@ public class HistoriaClinicaService {
                 historiaClinica.getId(),
                 historiaClinica.getResidente().getId(),
                 historiaClinica.getFechaCreacion(),
-                historiaClinica.getObservaciones()
+                historiaClinica.getObservaciones(),
+                historiaClinica.getAntecedentesPersonales(),
+                historiaClinica.getAntecedentesFamiliares(),
+                historiaClinica.getAlergias()
         );
     }
 
@@ -164,5 +164,29 @@ public class HistoriaClinicaService {
                                 "Detalle de historia clínica no encontrado con id: " + id
                         )
                 );
+    }
+
+    public HistoriaClinicaResponse actualizarAntecedentesYAlergias(
+            Long historiaClinicaId,
+            AntecedentesHistoriaClinicaRequest request
+    ) {
+
+        HistoriaClinica historiaClinica = historiaClinicaRepository
+                .findById(historiaClinicaId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Historia clínica no encontrada con id: "
+                                + historiaClinicaId
+                ));
+
+        historiaClinica.actualizarAntecedentesYAlergias(
+                request.antecedentesPersonales(),
+                request.antecedentesFamiliares(),
+                request.alergias()
+        );
+
+        HistoriaClinica actualizada =
+                historiaClinicaRepository.save(historiaClinica);
+
+        return toResponse(actualizada);
     }
 }

@@ -35,7 +35,26 @@ public class HistoriaClinica {
     @Column(length = 1000)
     private String observaciones;
 
+    @Column(name = "antecedentes_personales", length = 2000)
+    private String antecedentesPersonales;
+
+    @Column(name = "antecedentes_familiares", length = 2000)
+    private String antecedentesFamiliares;
+
+    @Column(length = 2000)
+    private String alergias;
+
     public HistoriaClinica() {
+    }
+
+    public void actualizarAntecedentesYAlergias(
+            String antecedentesPersonales,
+            String antecedentesFamiliares,
+            String alergias
+    ) {
+        this.antecedentesPersonales = antecedentesPersonales;
+        this.antecedentesFamiliares = antecedentesFamiliares;
+        this.alergias = alergias;
     }
 
     public Long getId() {
@@ -44,6 +63,18 @@ public class HistoriaClinica {
 
     public Residente getResidente() {
         return residente;
+    }
+
+    public String getAntecedentesPersonales() {
+        return antecedentesPersonales;
+    }
+
+    public String getAntecedentesFamiliares() {
+        return antecedentesFamiliares;
+    }
+
+    public String getAlergias() {
+        return alergias;
     }
 
     public void setResidente(Residente residente) {

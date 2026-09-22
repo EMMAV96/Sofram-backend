@@ -1,12 +1,10 @@
 package com.sofram.historiaclinica.web;
 
 import com.sofram.historiaclinica.application.HistoriaClinicaService;
-import com.sofram.historiaclinica.web.dto.DetalleHistoriaClinicaRequest;
-import com.sofram.historiaclinica.web.dto.DetalleHistoriaClinicaResponse;
-import com.sofram.historiaclinica.web.dto.HistoriaClinicaRequest;
-import com.sofram.historiaclinica.web.dto.HistoriaClinicaResponse;
+import com.sofram.historiaclinica.web.dto.*;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -63,4 +61,19 @@ public class HistoriaClinicaController {
     ) {
         return historiaClinicaService.listarDetalles(historiaClinicaId);
     }
+
+    @PutMapping("/{id}/antecedentes-alergias")
+    public ResponseEntity<HistoriaClinicaResponse> actualizarAntecedentesYAlergias(
+            @PathVariable Long id,
+            @Valid @RequestBody AntecedentesHistoriaClinicaRequest request
+    ) {
+
+        return ResponseEntity.ok(
+                historiaClinicaService.actualizarAntecedentesYAlergias(
+                        id,
+                        request
+                )
+        );
+    }
+
 }

@@ -16,7 +16,10 @@ public class HistoriaClinicaMapper {
                 historiaClinica.getId(),
                 historiaClinica.getResidente().getId(),
                 historiaClinica.getFechaCreacion(),
-                historiaClinica.getObservaciones()
+                historiaClinica.getObservaciones(),
+                historiaClinica.getAntecedentesPersonales(),
+                historiaClinica.getAntecedentesFamiliares(),
+                historiaClinica.getAlergias()
         );
     }
 
