@@ -154,4 +154,15 @@ public class HistoriaClinicaService {
                 detalle.getObservaciones()
         );
     }
+
+    @Transactional(readOnly = true)
+    public DetalleHistoriaClinica buscarDetalleEntidadPorId(Long id) {
+
+        return detalleRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Detalle de historia clínica no encontrado con id: " + id
+                        )
+                );
+    }
 }

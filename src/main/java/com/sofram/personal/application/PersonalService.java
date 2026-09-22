@@ -192,4 +192,8 @@ public class PersonalService {
         return turnoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Turno no encontrado"));
     }
+    @Transactional(readOnly = true)
+    public Empleado buscarEmpleadoPorId(Long id) {
+        return buscarEmpleado(id);
+    }
 }
