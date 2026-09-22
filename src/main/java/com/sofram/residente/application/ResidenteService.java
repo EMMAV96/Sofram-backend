@@ -226,4 +226,14 @@ public class ResidenteService {
                 estadoActual
         );
     }
+
+    @Transactional(readOnly = true)
+    public Residente buscarEntidadPorId(Long id) {
+        return residenteRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Residente no encontrado con id: " + id
+                        )
+                );
+    }
 }
