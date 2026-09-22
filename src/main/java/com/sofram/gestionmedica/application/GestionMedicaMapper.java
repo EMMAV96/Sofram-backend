@@ -1,8 +1,10 @@
 package com.sofram.gestionmedica.application;
 
 import com.sofram.gestionmedica.domain.AtencionMedica;
+import com.sofram.gestionmedica.domain.Diagnostico;
 import com.sofram.gestionmedica.domain.Evaluacion;
 import com.sofram.gestionmedica.web.dto.AtencionMedicaResponse;
+import com.sofram.gestionmedica.web.dto.DiagnosticoResponse;
 import com.sofram.gestionmedica.web.dto.EvaluacionResponse;
 import org.springframework.stereotype.Component;
 
@@ -29,6 +31,14 @@ public class GestionMedicaMapper {
                 evaluacion.getTipoEvaluacion(),
                 evaluacion.getDescripcion(),
                 evaluacion.getPlanIntervencion()
+        );
+    }
+
+    public DiagnosticoResponse toDiagnosticoResponse(Diagnostico diagnostico) {
+        return new DiagnosticoResponse(
+                diagnostico.getId(),
+                diagnostico.getDetalleHistoriaClinica().getId(),
+                diagnostico.getDescripcion()
         );
     }
 }
