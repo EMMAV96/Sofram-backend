@@ -350,6 +350,18 @@ public class SecurityConfig {
                         )
 
                         // =========================
+                        // REPORTES CLÍNICOS
+                        // =========================
+
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/reportes/clinico/residentes/*/pdf"
+                        ).hasAnyRole(
+                                "ADMINISTRADOR",
+                                "MEDICO"
+                        )
+
+                        // =========================
                         // ADMINISTRADOR
                         // =========================
 
