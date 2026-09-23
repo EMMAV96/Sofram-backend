@@ -2,6 +2,7 @@ package com.sofram.residente.application;
 
 import com.sofram.residente.domain.Habitacion;
 import com.sofram.residente.infrastructure.persistence.HabitacionRepository;
+import com.sofram.residente.infrastructure.persistence.ResidenteRepository;
 import com.sofram.residente.web.dto.HabitacionRequest;
 import com.sofram.residente.web.dto.HabitacionResponse;
 import com.sofram.shared.exception.DuplicateResourceException;
@@ -16,11 +17,14 @@ import java.util.List;
 public class HabitacionService {
 
     private final HabitacionRepository habitacionRepository;
+    private final ResidenteRepository residenteRepository;
 
     public HabitacionService(
-            HabitacionRepository habitacionRepository
+            HabitacionRepository habitacionRepository,
+            ResidenteRepository residenteRepository
     ) {
         this.habitacionRepository = habitacionRepository;
+        this.residenteRepository = residenteRepository;
     }
 
     @Transactional
@@ -116,12 +120,27 @@ public class HabitacionService {
             Habitacion habitacion
     ) {
 
+        long ocupacionActual =
+                residenteRepository
+                        .countByHabitacionIdAndFechaEgresoIsNull(
+                                habitacion.getId()
+                        );
+
+        int cuposDisponibles =
+                Math.max(
+                        habitacion.getCapacidad()
+                                - Math.toIntExact(ocupacionActual),
+                        0
+                );
+
         return new HabitacionResponse(
                 habitacion.getId(),
                 habitacion.getNumero(),
                 habitacion.getCapacidad(),
                 habitacion.getTipo(),
-                habitacion.getEstado()
+                habitacion.getEstado(),
+                ocupacionActual,
+                cuposDisponibles
         );
     }
 }

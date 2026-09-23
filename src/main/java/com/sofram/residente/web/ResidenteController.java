@@ -1,6 +1,9 @@
 package com.sofram.residente.web;
 
 import com.sofram.residente.application.ResidenteService;
+import com.sofram.residente.web.dto.ActualizarResidenteRequest;
+import com.sofram.residente.web.dto.CambioEstadoResidenteRequest;
+import com.sofram.residente.web.dto.HistorialEstadoResidenteResponse;
 import com.sofram.residente.web.dto.ResidenteRequest;
 import com.sofram.residente.web.dto.ResidenteResponse;
 
@@ -46,11 +49,29 @@ public class ResidenteController {
     @PutMapping("/{id}")
     public ResidenteResponse actualizar(
             @PathVariable Long id,
-            @Valid @RequestBody ResidenteRequest request
+            @Valid @RequestBody ActualizarResidenteRequest request
     ) {
         return residenteService.actualizar(
                 id,
                 request
         );
+    }
+
+    @PutMapping("/{id}/estado")
+    public ResidenteResponse cambiarEstado(
+            @PathVariable Long id,
+            @Valid @RequestBody CambioEstadoResidenteRequest request
+    ) {
+        return residenteService.cambiarEstado(
+                id,
+                request
+        );
+    }
+
+    @GetMapping("/{id}/historial-estados")
+    public List<HistorialEstadoResidenteResponse> listarHistorialEstados(
+            @PathVariable Long id
+    ) {
+        return residenteService.listarHistorialEstados(id);
     }
 }

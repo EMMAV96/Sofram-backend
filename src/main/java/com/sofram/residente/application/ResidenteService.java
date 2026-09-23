@@ -1,7 +1,16 @@
 package com.sofram.residente.application;
 
-import com.sofram.residente.domain.*;
-import com.sofram.residente.infrastructure.persistence.*;
+import com.sofram.residente.domain.EstadoResidente;
+import com.sofram.residente.domain.Habitacion;
+import com.sofram.residente.domain.HistorialEstadoResidente;
+import com.sofram.residente.domain.Residente;
+import com.sofram.residente.infrastructure.persistence.EstadoResidenteRepository;
+import com.sofram.residente.infrastructure.persistence.HabitacionRepository;
+import com.sofram.residente.infrastructure.persistence.HistorialEstadoResidenteRepository;
+import com.sofram.residente.infrastructure.persistence.ResidenteRepository;
+import com.sofram.residente.web.dto.ActualizarResidenteRequest;
+import com.sofram.residente.web.dto.CambioEstadoResidenteRequest;
+import com.sofram.residente.web.dto.HistorialEstadoResidenteResponse;
 import com.sofram.residente.web.dto.ResidenteRequest;
 import com.sofram.residente.web.dto.ResidenteResponse;
 
@@ -37,25 +46,33 @@ public class ResidenteService {
     }
 
     @Transactional
-    public ResidenteResponse crear(ResidenteRequest request) {
+    public ResidenteResponse crear(
+            ResidenteRequest request
+    ) {
 
         if (residenteRepository.existsByDni(request.dni())) {
             throw new DuplicateResourceException(
-                    "Ya existe un residente con DNI " + request.dni()
+                    "Ya existe un residente con DNI "
+                            + request.dni()
             );
         }
 
-        Habitacion habitacion = habitacionRepository
-                .findById(request.habitacionId())
-                .orElseThrow(() ->
+        Habitacion habitacion =
+                habitacionRepository.findById(
+                        request.habitacionId()
+                ).orElseThrow(() ->
                         new ResourceNotFoundException(
                                 "Habitación no encontrada"
                         )
                 );
 
-        EstadoResidente estado = estadoRepository
-                .findById(request.estadoInicialId())
-                .orElseThrow(() ->
+        // V14: comprobar capacidad antes de asignar.
+        validarCapacidadHabitacion(habitacion);
+
+        EstadoResidente estado =
+                estadoRepository.findById(
+                        request.estadoInicialId()
+                ).orElseThrow(() ->
                         new ResourceNotFoundException(
                                 "Estado de residente no encontrado"
                         )
@@ -137,7 +154,7 @@ public class ResidenteService {
     @Transactional
     public ResidenteResponse actualizar(
             Long id,
-            ResidenteRequest request
+            ActualizarResidenteRequest request
     ) {
 
         Residente residente =
@@ -168,6 +185,22 @@ public class ResidenteService {
                                 "Habitación no encontrada"
                         )
                 );
+
+        boolean cambiaHabitacion =
+                !residente.getHabitacion()
+                        .getId()
+                        .equals(habitacion.getId());
+
+        /*
+         * Solo comprobamos capacidad cuando el residente
+         * realmente cambia a otra habitación.
+         *
+         * Si el residente quedará egresado, no ocupará
+         * una plaza actual.
+         */
+        if (cambiaHabitacion && request.fechaEgreso() == null) {
+            validarCapacidadHabitacion(habitacion);
+        }
 
         residente.setNombre(request.nombre());
         residente.setApellido(request.apellido());
@@ -229,11 +262,98 @@ public class ResidenteService {
 
     @Transactional(readOnly = true)
     public Residente buscarEntidadPorId(Long id) {
+
         return residenteRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "Residente no encontrado con id: " + id
+                                "Residente no encontrado con id: "
+                                        + id
                         )
                 );
+    }
+
+    @Transactional
+    public ResidenteResponse cambiarEstado(
+            Long residenteId,
+            CambioEstadoResidenteRequest request
+    ) {
+
+        Residente residente =
+                residenteRepository.findById(residenteId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "No existe un residente con id "
+                                                + residenteId
+                                )
+                        );
+
+        EstadoResidente estado =
+                estadoRepository.findById(request.estadoId())
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Estado de residente no encontrado"
+                                )
+                        );
+
+        HistorialEstadoResidente historial =
+                new HistorialEstadoResidente();
+
+        historial.setResidente(residente);
+        historial.setEstado(estado);
+        historial.setFechaCambio(request.fechaCambio());
+        historial.setObservacion(request.observacion());
+
+        historialEstadoRepository.save(historial);
+
+        /*
+         * Volvemos a calcular el estado actual desde el historial.
+         * Así evitamos devolver un estado incorrecto si se registra
+         * un cambio histórico con una fecha anterior.
+         */
+        return toResponse(residente);
+    }
+
+    @Transactional(readOnly = true)
+    public List<HistorialEstadoResidenteResponse> listarHistorialEstados(
+            Long residenteId
+    ) {
+
+        buscarEntidadPorId(residenteId);
+
+        return historialEstadoRepository
+                .findByResidenteIdOrderByFechaCambioDesc(
+                        residenteId
+                )
+                .stream()
+                .map(historial ->
+                        new HistorialEstadoResidenteResponse(
+                                historial.getId(),
+                                historial.getResidente().getId(),
+                                historial.getEstado().getId(),
+                                historial.getEstado().getNombre(),
+                                historial.getFechaCambio(),
+                                historial.getObservacion()
+                        )
+                )
+                .toList();
+    }
+
+    private void validarCapacidadHabitacion(
+            Habitacion habitacion
+    ) {
+
+        long ocupacionActual =
+                residenteRepository
+                        .countByHabitacionIdAndFechaEgresoIsNull(
+                                habitacion.getId()
+                        );
+
+        if (ocupacionActual >= habitacion.getCapacidad()) {
+            throw new IllegalArgumentException(
+                    "La habitación "
+                            + habitacion.getNumero()
+                            + " no tiene cupos disponibles"
+            );
+        }
     }
 }

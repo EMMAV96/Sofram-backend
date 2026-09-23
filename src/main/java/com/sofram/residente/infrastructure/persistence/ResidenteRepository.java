@@ -17,4 +17,6 @@ public interface ResidenteRepository
             String nombre,
             String apellido
     );
+
+    long countByHabitacionIdAndFechaEgresoIsNull(Long habitacionId);
 }
