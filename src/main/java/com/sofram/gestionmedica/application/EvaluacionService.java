@@ -1,5 +1,6 @@
 package com.sofram.gestionmedica.application;
 
+import com.sofram.auditoria.application.AuditoriaService;
 import com.sofram.gestionmedica.domain.AtencionMedica;
 import com.sofram.gestionmedica.domain.Evaluacion;
 import com.sofram.gestionmedica.infrastructure.persistence.AtencionMedicaRepository;
@@ -22,17 +23,20 @@ public class EvaluacionService {
     private final AtencionMedicaRepository atencionMedicaRepository;
     private final HistoriaClinicaService historiaClinicaService;
     private final GestionMedicaMapper mapper;
+    private final AuditoriaService auditoriaService;
 
     public EvaluacionService(
             EvaluacionRepository evaluacionRepository,
             AtencionMedicaRepository atencionMedicaRepository,
             HistoriaClinicaService historiaClinicaService,
-            GestionMedicaMapper mapper
+            GestionMedicaMapper mapper,
+            AuditoriaService auditoriaService
     ) {
         this.evaluacionRepository = evaluacionRepository;
         this.atencionMedicaRepository = atencionMedicaRepository;
         this.historiaClinicaService = historiaClinicaService;
         this.mapper = mapper;
+        this.auditoriaService = auditoriaService;
     }
 
     public EvaluacionResponse crear(EvaluacionRequest request) {
@@ -61,9 +65,18 @@ public class EvaluacionService {
                 request.planIntervencion()
         );
 
-        return mapper.toEvaluacionResponse(
-                evaluacionRepository.save(evaluacion)
+        Evaluacion guardada =
+                evaluacionRepository.save(evaluacion);
+
+        auditoriaService.registrar(
+                "CREAR",
+                "GESTION_MEDICA",
+                "Evaluacion",
+                guardada.getId(),
+                "Registro de evaluación"
         );
+
+        return mapper.toEvaluacionResponse(guardada);
     }
 
     @Transactional(readOnly = true)

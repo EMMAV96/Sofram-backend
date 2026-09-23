@@ -1,5 +1,6 @@
 package com.sofram.residente.application;
 
+import com.sofram.auditoria.application.AuditoriaService;
 import com.sofram.residente.domain.EstadoResidente;
 import com.sofram.residente.domain.Habitacion;
 import com.sofram.residente.domain.HistorialEstadoResidente;
@@ -30,19 +31,22 @@ public class ResidenteService {
     private final EstadoResidenteRepository estadoRepository;
     private final HistorialEstadoResidenteRepository historialEstadoRepository;
     private final ResidenteMapper residenteMapper;
+    private final AuditoriaService auditoriaService;
 
     public ResidenteService(
             ResidenteRepository residenteRepository,
             HabitacionRepository habitacionRepository,
             EstadoResidenteRepository estadoRepository,
             HistorialEstadoResidenteRepository historialEstadoRepository,
-            ResidenteMapper residenteMapper
+            ResidenteMapper residenteMapper,
+            AuditoriaService auditoriaService
     ) {
         this.residenteRepository = residenteRepository;
         this.habitacionRepository = habitacionRepository;
         this.estadoRepository = estadoRepository;
         this.historialEstadoRepository = historialEstadoRepository;
         this.residenteMapper = residenteMapper;
+        this.auditoriaService = auditoriaService;
     }
 
     @Transactional
@@ -120,6 +124,14 @@ public class ResidenteService {
         );
 
         historialEstadoRepository.save(historial);
+
+        auditoriaService.registrar(
+                "CREAR",
+                "RESIDENTES",
+                "Residente",
+                guardado.getId(),
+                "Admisión de residente"
+        );
 
         return residenteMapper.toResponse(
                 guardado,
@@ -231,6 +243,14 @@ public class ResidenteService {
         Residente actualizado =
                 residenteRepository.save(residente);
 
+        auditoriaService.registrar(
+                "ACTUALIZAR",
+                "RESIDENTES",
+                "Residente",
+                actualizado.getId(),
+                "Actualización de datos del residente"
+        );
+
         return toResponse(actualizado);
     }
 
@@ -304,6 +324,14 @@ public class ResidenteService {
         historial.setObservacion(request.observacion());
 
         historialEstadoRepository.save(historial);
+
+        auditoriaService.registrar(
+                "CAMBIAR_ESTADO",
+                "RESIDENTES",
+                "Residente",
+                residente.getId(),
+                "Nuevo estado: " + estado.getNombre()
+        );
 
         /*
          * Volvemos a calcular el estado actual desde el historial.

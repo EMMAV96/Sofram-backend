@@ -1,5 +1,6 @@
 package com.sofram.historiaclinica.application;
 
+import com.sofram.auditoria.application.AuditoriaService;
 import com.sofram.historiaclinica.domain.DetalleHistoriaClinica;
 import com.sofram.historiaclinica.domain.HistoriaClinica;
 import com.sofram.historiaclinica.infrastructure.persistence.DetalleHistoriaClinicaRepository;
@@ -20,15 +21,18 @@ public class HistoriaClinicaService {
     private final HistoriaClinicaRepository historiaClinicaRepository;
     private final DetalleHistoriaClinicaRepository detalleRepository;
     private final ResidenteService residenteService;
+    private final AuditoriaService auditoriaService;
 
     public HistoriaClinicaService(
             HistoriaClinicaRepository historiaClinicaRepository,
             DetalleHistoriaClinicaRepository detalleRepository,
-            ResidenteService residenteService
+            ResidenteService residenteService,
+            AuditoriaService auditoriaService
     ) {
         this.historiaClinicaRepository = historiaClinicaRepository;
         this.detalleRepository = detalleRepository;
         this.residenteService = residenteService;
+        this.auditoriaService = auditoriaService;
     }
 
     @Transactional
@@ -51,6 +55,14 @@ public class HistoriaClinicaService {
 
         HistoriaClinica guardada =
                 historiaClinicaRepository.save(historiaClinica);
+
+        auditoriaService.registrar(
+                "CREAR",
+                "HISTORIA_CLINICA",
+                "HistoriaClinica",
+                guardada.getId(),
+                "Creación de historia clínica"
+        );
 
         return toResponse(guardada);
     }
@@ -107,6 +119,14 @@ public class HistoriaClinicaService {
 
         DetalleHistoriaClinica guardado =
                 detalleRepository.save(detalle);
+
+        auditoriaService.registrar(
+                "AGREGAR_DETALLE",
+                "HISTORIA_CLINICA",
+                "DetalleHistoriaClinica",
+                guardado.getId(),
+                "Nuevo detalle de historia clínica"
+        );
 
         return toDetalleResponse(guardado);
     }
@@ -186,6 +206,14 @@ public class HistoriaClinicaService {
 
         HistoriaClinica actualizada =
                 historiaClinicaRepository.save(historiaClinica);
+
+        auditoriaService.registrar(
+                "ACTUALIZAR_ANTECEDENTES",
+                "HISTORIA_CLINICA",
+                "HistoriaClinica",
+                actualizada.getId(),
+                "Actualización de antecedentes y alergias"
+        );
 
         return toResponse(actualizada);
     }

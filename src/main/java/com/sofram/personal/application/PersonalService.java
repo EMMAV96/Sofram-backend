@@ -1,5 +1,6 @@
 package com.sofram.personal.application;
 
+import com.sofram.auditoria.application.AuditoriaService;
 import com.sofram.personal.domain.AsignacionTurno;
 import com.sofram.personal.domain.Cargo;
 import com.sofram.personal.domain.Empleado;
@@ -32,17 +33,20 @@ public class PersonalService {
     private final EmpleadoRepository empleadoRepository;
     private final TurnoRepository turnoRepository;
     private final AsignacionTurnoRepository asignacionTurnoRepository;
+    private final AuditoriaService auditoriaService;
 
     public PersonalService(
             CargoRepository cargoRepository,
             EmpleadoRepository empleadoRepository,
             TurnoRepository turnoRepository,
-            AsignacionTurnoRepository asignacionTurnoRepository
+            AsignacionTurnoRepository asignacionTurnoRepository,
+            AuditoriaService auditoriaService
     ) {
         this.cargoRepository = cargoRepository;
         this.empleadoRepository = empleadoRepository;
         this.turnoRepository = turnoRepository;
         this.asignacionTurnoRepository = asignacionTurnoRepository;
+        this.auditoriaService = auditoriaService;
     }
 
     @Transactional(readOnly = true)
@@ -92,6 +96,13 @@ public class PersonalService {
                 request.telefono(),
                 request.email()
         ));
+        auditoriaService.registrar(
+                "CREAR",
+                "PERSONAL",
+                "Empleado",
+                empleado.getId(),
+                "Alta de empleado"
+        );
         return PersonalMapper.toResponse(empleado);
     }
 
@@ -113,6 +124,13 @@ public class PersonalService {
                 request.telefono(),
                 request.email()
         );
+        auditoriaService.registrar(
+                "ACTUALIZAR",
+                "PERSONAL",
+                "Empleado",
+                empleado.getId(),
+                "Actualización de empleado"
+        );
         return PersonalMapper.toResponse(empleado);
     }
 
@@ -125,6 +143,13 @@ public class PersonalService {
         empleado.darDeBaja(request.fechaBaja());
         asignacionTurnoRepository.findByEmpleadoIdAndFechaHastaIsNull(id)
                 .ifPresent(asignacion -> asignacion.cerrar(request.fechaBaja()));
+        auditoriaService.registrar(
+                "BAJA",
+                "PERSONAL",
+                "Empleado",
+                empleado.getId(),
+                "Baja de empleado"
+        );
         return PersonalMapper.toResponse(empleado);
     }
 

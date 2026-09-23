@@ -1,5 +1,6 @@
 package com.sofram.gestionmedica.application;
 
+import com.sofram.auditoria.application.AuditoriaService;
 import com.sofram.gestionmedica.domain.Diagnostico;
 import com.sofram.gestionmedica.infrastructure.persistence.DiagnosticoRepository;
 import com.sofram.gestionmedica.web.dto.DiagnosticoRequest;
@@ -22,15 +23,18 @@ public class DiagnosticoService {
     private final DiagnosticoRepository diagnosticoRepository;
     private final HistoriaClinicaService historiaClinicaService;
     private final GestionMedicaMapper mapper;
+    private final AuditoriaService auditoriaService;
 
     public DiagnosticoService(
             DiagnosticoRepository diagnosticoRepository,
             HistoriaClinicaService historiaClinicaService,
-            GestionMedicaMapper mapper
+            GestionMedicaMapper mapper,
+            AuditoriaService auditoriaService
     ) {
         this.diagnosticoRepository = diagnosticoRepository;
         this.historiaClinicaService = historiaClinicaService;
         this.mapper = mapper;
+        this.auditoriaService = auditoriaService;
     }
 
     public DiagnosticoResponse crear(DiagnosticoRequest request) {
@@ -45,9 +49,18 @@ public class DiagnosticoService {
                 request.descripcion()
         );
 
-        return mapper.toDiagnosticoResponse(
-                diagnosticoRepository.save(diagnostico)
+        Diagnostico guardado =
+                diagnosticoRepository.save(diagnostico);
+
+        auditoriaService.registrar(
+                "CREAR",
+                "GESTION_MEDICA",
+                "Diagnostico",
+                guardado.getId(),
+                "Registro de diagnóstico"
         );
+
+        return mapper.toDiagnosticoResponse(guardado);
     }
 
     @Transactional(readOnly = true)

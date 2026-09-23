@@ -1,5 +1,6 @@
 package com.sofram.gestionmedica.application;
 
+import com.sofram.auditoria.application.AuditoriaService;
 import com.sofram.gestionmedica.domain.AtencionMedica;
 import com.sofram.gestionmedica.infrastructure.persistence.AtencionMedicaRepository;
 import com.sofram.gestionmedica.web.dto.AtencionMedicaRequest;
@@ -22,17 +23,20 @@ public class AtencionMedicaService {
     private final ResidenteService residenteService;
     private final PersonalService personalService;
     private final GestionMedicaMapper mapper;
+    private final AuditoriaService auditoriaService;
 
     public AtencionMedicaService(
             AtencionMedicaRepository atencionMedicaRepository,
             ResidenteService residenteService,
             PersonalService personalService,
-            GestionMedicaMapper mapper
+            GestionMedicaMapper mapper,
+            AuditoriaService auditoriaService
     ) {
         this.atencionMedicaRepository = atencionMedicaRepository;
         this.residenteService = residenteService;
         this.personalService = personalService;
         this.mapper = mapper;
+        this.auditoriaService = auditoriaService;
     }
 
     public AtencionMedicaResponse crear(AtencionMedicaRequest request) {
@@ -54,9 +58,18 @@ public class AtencionMedicaService {
                 request.observaciones()
         );
 
-        return mapper.toAtencionResponse(
-                atencionMedicaRepository.save(atencion)
+        AtencionMedica guardada =
+                atencionMedicaRepository.save(atencion);
+
+        auditoriaService.registrar(
+                "CREAR",
+                "GESTION_MEDICA",
+                "AtencionMedica",
+                guardada.getId(),
+                "Registro de atención médica"
         );
+
+        return mapper.toAtencionResponse(guardada);
     }
 
     @Transactional(readOnly = true)
