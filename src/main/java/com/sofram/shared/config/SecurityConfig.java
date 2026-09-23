@@ -362,6 +362,18 @@ public class SecurityConfig {
                         )
 
                         // =========================
+                        // REPORTES DE OCUPACIÓN
+                        // =========================
+
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/reportes/ocupacion/pdf"
+                        ).hasAnyRole(
+                                "ADMINISTRADOR",
+                                "ADMINISTRATIVO"
+                        )
+
+                        // =========================
                         // ADMINISTRADOR
                         // =========================
 
