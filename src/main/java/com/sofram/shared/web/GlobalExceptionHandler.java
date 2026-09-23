@@ -14,7 +14,10 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -55,6 +58,23 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     ResponseEntity<ApiError> handleGeneric(Exception exception, HttpServletRequest request) {
         return build(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno", request, List.of());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalArgumentException(
+            IllegalArgumentException ex
+    ) {
+
+        Map<String, Object> body = new HashMap<>();
+
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.BAD_REQUEST.value());
+        body.put("error", "Bad Request");
+        body.put("message", ex.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(body);
     }
 
     private FieldErrorDetail toFieldErrorDetail(FieldError fieldError) {
