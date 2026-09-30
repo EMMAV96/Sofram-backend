@@ -7,8 +7,9 @@ import com.sofram.gestionmedica.infrastructure.persistence.AtencionMedicaReposit
 import com.sofram.gestionmedica.infrastructure.persistence.EvaluacionRepository;
 import com.sofram.gestionmedica.web.dto.EvaluacionRequest;
 import com.sofram.gestionmedica.web.dto.EvaluacionResponse;
-import com.sofram.historiaclinica.domain.DetalleHistoriaClinica;
 import com.sofram.historiaclinica.application.HistoriaClinicaService;
+import com.sofram.historiaclinica.domain.DetalleHistoriaClinica;
+import com.sofram.shared.exception.DuplicateResourceException;
 import com.sofram.shared.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +42,14 @@ public class EvaluacionService {
 
     public EvaluacionResponse crear(EvaluacionRequest request) {
 
+        evaluacionRepository.findByAtencionMedicaId(
+                request.atencionMedicaId()
+        ).ifPresent(evaluacion -> {
+            throw new DuplicateResourceException(
+                    "La atención médica ya tiene una evaluación"
+            );
+        });
+
         AtencionMedica atencionMedica =
                 atencionMedicaRepository.findById(
                         request.atencionMedicaId()
@@ -54,6 +63,15 @@ public class EvaluacionService {
                 historiaClinicaService.buscarDetalleEntidadPorId(
                         request.detalleHistoriaClinicaId()
                 );
+
+        if (!atencionMedica.getResidente().getId()
+                .equals(detalle.getHistoriaClinica()
+                        .getResidente()
+                        .getId())) {
+            throw new IllegalArgumentException(
+                    "La atención médica y el detalle de historia clínica pertenecen a residentes diferentes"
+            );
+        }
 
         Evaluacion evaluacion = new Evaluacion();
 
@@ -84,7 +102,9 @@ public class EvaluacionService {
 
         Evaluacion evaluacion = evaluacionRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException("Evaluación no encontrada")
+                        new ResourceNotFoundException(
+                                "Evaluación no encontrada"
+                        )
                 );
 
         return mapper.toEvaluacionResponse(evaluacion);
@@ -96,7 +116,7 @@ public class EvaluacionService {
         Evaluacion evaluacion = evaluacionRepository
                 .findByAtencionMedicaId(atencionMedicaId)
                 .orElseThrow(() ->
-                        new RuntimeException(
+                        new ResourceNotFoundException(
                                 "No existe una evaluación para esta atención médica"
                         )
                 );

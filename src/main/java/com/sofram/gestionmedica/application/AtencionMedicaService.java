@@ -1,6 +1,7 @@
 package com.sofram.gestionmedica.application;
 
 import com.sofram.auditoria.application.AuditoriaService;
+import com.sofram.auth.application.UsuarioPrincipal;
 import com.sofram.gestionmedica.domain.AtencionMedica;
 import com.sofram.gestionmedica.infrastructure.persistence.AtencionMedicaRepository;
 import com.sofram.gestionmedica.web.dto.AtencionMedicaRequest;
@@ -10,6 +11,10 @@ import com.sofram.personal.application.PersonalService;
 import com.sofram.personal.domain.Empleado;
 import com.sofram.residente.application.ResidenteService;
 import com.sofram.residente.domain.Residente;
+import com.sofram.shared.exception.ResourceNotFoundException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,7 +50,10 @@ public class AtencionMedicaService {
                 request.residenteId()
         );
 
-        Empleado empleado = personalService.buscarEmpleadoPorId(request.empleadoId());
+        Empleado empleado = personalService.buscarEmpleadoPorId(
+                request.empleadoId()
+        );
+        validarEmpleadoAutenticado(empleado.getId());
 
         AtencionMedica atencion = new AtencionMedica();
 
@@ -77,7 +85,9 @@ public class AtencionMedicaService {
 
         AtencionMedica atencion = atencionMedicaRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException("Atención médica no encontrada")
+                        new ResourceNotFoundException(
+                                "Atención médica no encontrada"
+                        )
                 );
 
         return mapper.toAtencionResponse(atencion);
@@ -101,5 +111,27 @@ public class AtencionMedicaService {
                 .stream()
                 .map(mapper::toAtencionResponse)
                 .toList();
+    }
+
+    private void validarEmpleadoAutenticado(Long empleadoId) {
+
+        Authentication authentication =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
+
+        if (authentication == null
+                || !(authentication.getPrincipal()
+                instanceof UsuarioPrincipal principal)) {
+            throw new AccessDeniedException("Acceso denegado");
+        }
+
+        if ("ADMINISTRADOR".equals(principal.getRol())) {
+            return;
+        }
+
+        if (!empleadoId.equals(principal.getEmpleadoId())) {
+            throw new AccessDeniedException("Acceso denegado");
+        }
     }
 }

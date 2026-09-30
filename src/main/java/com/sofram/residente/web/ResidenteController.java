@@ -1,8 +1,11 @@
 package com.sofram.residente.web;
 
+import com.sofram.residente.application.EstadoResidenteService;
 import com.sofram.residente.application.ResidenteService;
 import com.sofram.residente.web.dto.ActualizarResidenteRequest;
 import com.sofram.residente.web.dto.CambioEstadoResidenteRequest;
+import com.sofram.residente.web.dto.EstadoResidenteResponse;
+import com.sofram.residente.web.dto.EgresoResidenteRequest;
 import com.sofram.residente.web.dto.HistorialEstadoResidenteResponse;
 import com.sofram.residente.web.dto.ResidenteRequest;
 import com.sofram.residente.web.dto.ResidenteResponse;
@@ -19,11 +22,14 @@ import java.util.List;
 public class ResidenteController {
 
     private final ResidenteService residenteService;
+    private final EstadoResidenteService estadoResidenteService;
 
     public ResidenteController(
-            ResidenteService residenteService
+            ResidenteService residenteService,
+            EstadoResidenteService estadoResidenteService
     ) {
         this.residenteService = residenteService;
+        this.estadoResidenteService = estadoResidenteService;
     }
 
     @PostMapping
@@ -37,6 +43,11 @@ public class ResidenteController {
     @GetMapping
     public List<ResidenteResponse> listar() {
         return residenteService.listar();
+    }
+
+    @GetMapping("/estados")
+    public List<EstadoResidenteResponse> listarEstados() {
+        return estadoResidenteService.listar();
     }
 
     @GetMapping("/{id}")
@@ -63,6 +74,17 @@ public class ResidenteController {
             @Valid @RequestBody CambioEstadoResidenteRequest request
     ) {
         return residenteService.cambiarEstado(
+                id,
+                request
+        );
+    }
+
+    @PutMapping("/{id}/egreso")
+    public ResidenteResponse egresar(
+            @PathVariable Long id,
+            @Valid @RequestBody EgresoResidenteRequest request
+    ) {
+        return residenteService.egresar(
                 id,
                 request
         );

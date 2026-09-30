@@ -11,6 +11,7 @@ import java.util.List;
 public class UsuarioPrincipal implements UserDetails {
 
     private final Long id;
+    private final Long empleadoId;
     private final String username;
     private final String password;
     private final boolean activo;
@@ -18,6 +19,7 @@ public class UsuarioPrincipal implements UserDetails {
 
     public UsuarioPrincipal(Usuario usuario) {
         this.id = usuario.getId();
+        this.empleadoId = usuario.getEmpleadoId();
         this.username = usuario.getUsername();
         this.password = usuario.getPasswordHash();
         this.activo = usuario.isActivo();
@@ -26,6 +28,10 @@ public class UsuarioPrincipal implements UserDetails {
 
     public Long getId() {
         return id;
+    }
+
+    public Long getEmpleadoId() {
+        return empleadoId;
     }
 
     public String getRol() {

@@ -11,6 +11,7 @@ import com.sofram.residente.infrastructure.persistence.HistorialEstadoResidenteR
 import com.sofram.residente.infrastructure.persistence.ResidenteRepository;
 import com.sofram.residente.web.dto.ActualizarResidenteRequest;
 import com.sofram.residente.web.dto.CambioEstadoResidenteRequest;
+import com.sofram.residente.web.dto.EgresoResidenteRequest;
 import com.sofram.residente.web.dto.HistorialEstadoResidenteResponse;
 import com.sofram.residente.web.dto.ResidenteRequest;
 import com.sofram.residente.web.dto.ResidenteResponse;
@@ -339,6 +340,62 @@ public class ResidenteService {
          * un cambio histórico con una fecha anterior.
          */
         return toResponse(residente);
+    }
+
+    @Transactional
+    public ResidenteResponse egresar(
+            Long residenteId,
+            EgresoResidenteRequest request
+    ) {
+
+        Residente residente =
+                residenteRepository.findById(residenteId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "No existe un residente con id "
+                                                + residenteId
+                                )
+                        );
+
+        EstadoResidente estado =
+                estadoRepository.findById(request.estadoId())
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Estado de residente no encontrado"
+                                )
+                        );
+
+        if (request.fechaEgreso()
+                .isBefore(residente.getFechaIngreso())) {
+            throw new IllegalArgumentException(
+                    "La fecha de egreso no puede ser anterior a la fecha de ingreso"
+            );
+        }
+
+        residente.setFechaEgreso(request.fechaEgreso());
+
+        Residente actualizado =
+                residenteRepository.save(residente);
+
+        HistorialEstadoResidente historial =
+                new HistorialEstadoResidente();
+
+        historial.setResidente(actualizado);
+        historial.setEstado(estado);
+        historial.setFechaCambio(request.fechaEgreso());
+        historial.setObservacion(request.observacion());
+
+        historialEstadoRepository.save(historial);
+
+        auditoriaService.registrar(
+                "EGRESAR",
+                "RESIDENTES",
+                "Residente",
+                actualizado.getId(),
+                "Egreso de residente"
+        );
+
+        return toResponse(actualizado);
     }
 
     @Transactional(readOnly = true)

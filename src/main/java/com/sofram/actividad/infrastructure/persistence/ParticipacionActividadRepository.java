@@ -18,4 +18,6 @@ public interface ParticipacionActividadRepository
             Long actividadId,
             Long residenteId
     );
+
+    long countByActividadId(Long actividadId);
 }

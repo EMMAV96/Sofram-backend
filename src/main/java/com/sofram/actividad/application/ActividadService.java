@@ -1,5 +1,6 @@
 package com.sofram.actividad.application;
 
+import com.sofram.auth.application.UsuarioPrincipal;
 import com.sofram.actividad.domain.Actividad;
 import com.sofram.actividad.domain.DetalleCalendario;
 import com.sofram.actividad.infrastructure.persistence.ActividadRepository;
@@ -7,7 +8,11 @@ import com.sofram.actividad.web.dto.ActividadRequest;
 import com.sofram.actividad.web.dto.ActividadResponse;
 import com.sofram.personal.application.PersonalService;
 import com.sofram.personal.domain.Empleado;
+import com.sofram.shared.exception.BusinessRuleException;
 import com.sofram.shared.exception.ResourceNotFoundException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +47,8 @@ public class ActividadService {
                 personalService.buscarEmpleadoPorId(
                         request.empleadoId()
                 );
+        validarEmpleadoAutenticado(empleado.getId());
+        validarEmpleadoActivo(empleado);
 
         Actividad actividad = new Actividad(
                 detalle,
@@ -134,5 +141,36 @@ public class ActividadService {
                 actividad.getCupoMaximo(),
                 actividad.getEstado()
         );
+    }
+
+    private void validarEmpleadoAutenticado(Long empleadoId) {
+
+        Authentication authentication =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
+
+        if (authentication == null
+                || !(authentication.getPrincipal()
+                instanceof UsuarioPrincipal principal)) {
+            throw new AccessDeniedException("Acceso denegado");
+        }
+
+        if ("ADMINISTRADOR".equals(principal.getRol())) {
+            return;
+        }
+
+        if (!empleadoId.equals(principal.getEmpleadoId())) {
+            throw new AccessDeniedException("Acceso denegado");
+        }
+    }
+
+    private void validarEmpleadoActivo(Empleado empleado) {
+
+        if (!empleado.isActivo()) {
+            throw new BusinessRuleException(
+                    "El empleado se encuentra dado de baja"
+            );
+        }
     }
 }

@@ -6,6 +6,7 @@ import com.sofram.actividad.infrastructure.persistence.ParticipacionActividadRep
 import com.sofram.actividad.web.dto.*;
 import com.sofram.residente.application.ResidenteService;
 import com.sofram.residente.domain.Residente;
+import com.sofram.shared.exception.BusinessRuleException;
 import com.sofram.shared.exception.DuplicateResourceException;
 import com.sofram.shared.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
@@ -48,11 +49,13 @@ public class ParticipacionActividadService {
                 actividadService.buscarEntidadPorId(
                         request.actividadId()
                 );
+        validarCupoDisponible(actividad);
 
         Residente residente =
                 residenteService.buscarEntidadPorId(
                         request.residenteId()
                 );
+        validarResidenteActivo(residente);
 
         ParticipacionActividad participacion =
                 new ParticipacionActividad(
@@ -149,5 +152,26 @@ public class ParticipacionActividadService {
                 participacion.getEstado(),
                 participacion.getObservaciones()
         );
+    }
+
+    private void validarCupoDisponible(Actividad actividad) {
+
+        long cantidadParticipaciones =
+                repository.countByActividadId(actividad.getId());
+
+        if (cantidadParticipaciones >= actividad.getCupoMaximo()) {
+            throw new BusinessRuleException(
+                    "La actividad alcanzó el cupo máximo"
+            );
+        }
+    }
+
+    private void validarResidenteActivo(Residente residente) {
+
+        if (residente.getFechaEgreso() != null) {
+            throw new BusinessRuleException(
+                    "El residente se encuentra egresado"
+            );
+        }
     }
 }

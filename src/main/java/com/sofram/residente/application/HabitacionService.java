@@ -101,9 +101,19 @@ public class HabitacionService {
                 .ifPresent(otra -> {
                     throw new DuplicateResourceException(
                             "Ya existe una habitación con número "
-                                    + request.numero()
+                            + request.numero()
                     );
                 });
+
+        long ocupacionActual =
+                residenteRepository
+                        .countByHabitacionIdAndFechaEgresoIsNull(id);
+
+        if (request.capacidad() < ocupacionActual) {
+            throw new IllegalArgumentException(
+                    "No se puede reducir la capacidad por debajo de la ocupación actual"
+            );
+        }
 
         habitacion.setNumero(request.numero());
         habitacion.setCapacidad(request.capacidad());

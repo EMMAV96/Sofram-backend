@@ -6,6 +6,7 @@ import com.sofram.shared.exception.DuplicateResourceException;
 import com.sofram.shared.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.validation.FieldError;
@@ -38,6 +39,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DisabledException.class)
     ResponseEntity<ApiError> handleDisabled(DisabledException exception, HttpServletRequest request) {
         return build(HttpStatus.FORBIDDEN, "Usuario inactivo", request, List.of());
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    ResponseEntity<ApiError> handleAccessDenied(AccessDeniedException exception, HttpServletRequest request) {
+        return build(HttpStatus.FORBIDDEN, "Acceso denegado", request, List.of());
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
