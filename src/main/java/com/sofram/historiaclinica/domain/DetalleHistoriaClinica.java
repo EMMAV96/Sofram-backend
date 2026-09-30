@@ -1,5 +1,6 @@
 package com.sofram.historiaclinica.domain;
 
+import com.sofram.personal.domain.Empleado;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -24,6 +25,10 @@ public class DetalleHistoriaClinica {
 
     @Column(length = 1000)
     private String observaciones;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "profesional_id")
+    private Empleado profesional;
 
     public DetalleHistoriaClinica() {
     }
@@ -54,5 +59,13 @@ public class DetalleHistoriaClinica {
 
     public void setObservaciones(String observaciones) {
         this.observaciones = observaciones;
+    }
+
+    public Empleado getProfesional() {
+        return profesional;
+    }
+
+    public void setProfesional(Empleado profesional) {
+        this.profesional = profesional;
     }
 }

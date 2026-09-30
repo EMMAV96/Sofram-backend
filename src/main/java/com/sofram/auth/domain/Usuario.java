@@ -48,6 +48,19 @@ public class Usuario {
     protected Usuario() {
     }
 
+    public Usuario(
+            Long empleadoId,
+            Rol rol,
+            String username,
+            String passwordHash
+    ) {
+        this.empleadoId = empleadoId;
+        this.rol = rol;
+        this.username = username;
+        this.passwordHash = passwordHash;
+        this.activo = true;
+    }
+
     public Long getId() {
         return id;
     }
@@ -78,6 +91,18 @@ public class Usuario {
 
     public void registrarAcceso(LocalDateTime fechaHora) {
         this.ultimoAcceso = fechaHora;
+    }
+
+    public void actualizarDatosAcceso(
+            String username,
+            Rol rol
+    ) {
+        this.username = username;
+        this.rol = rol;
+    }
+
+    public void cambiarPassword(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 
     public LocalDateTime getCreatedAt() {

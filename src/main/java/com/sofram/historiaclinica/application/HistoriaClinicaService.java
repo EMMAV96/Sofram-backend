@@ -1,15 +1,21 @@
 package com.sofram.historiaclinica.application;
 
 import com.sofram.auditoria.application.AuditoriaService;
+import com.sofram.auth.application.UsuarioPrincipal;
 import com.sofram.historiaclinica.domain.DetalleHistoriaClinica;
 import com.sofram.historiaclinica.domain.HistoriaClinica;
 import com.sofram.historiaclinica.infrastructure.persistence.DetalleHistoriaClinicaRepository;
 import com.sofram.historiaclinica.infrastructure.persistence.HistoriaClinicaRepository;
 import com.sofram.historiaclinica.web.dto.*;
+import com.sofram.personal.application.PersonalService;
+import com.sofram.personal.domain.Empleado;
 import com.sofram.residente.application.ResidenteService;
 import com.sofram.residente.domain.Residente;
 import com.sofram.shared.exception.DuplicateResourceException;
 import com.sofram.shared.exception.ResourceNotFoundException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,17 +27,20 @@ public class HistoriaClinicaService {
     private final HistoriaClinicaRepository historiaClinicaRepository;
     private final DetalleHistoriaClinicaRepository detalleRepository;
     private final ResidenteService residenteService;
+    private final PersonalService personalService;
     private final AuditoriaService auditoriaService;
 
     public HistoriaClinicaService(
             HistoriaClinicaRepository historiaClinicaRepository,
             DetalleHistoriaClinicaRepository detalleRepository,
             ResidenteService residenteService,
+            PersonalService personalService,
             AuditoriaService auditoriaService
     ) {
         this.historiaClinicaRepository = historiaClinicaRepository;
         this.detalleRepository = detalleRepository;
         this.residenteService = residenteService;
+        this.personalService = personalService;
         this.auditoriaService = auditoriaService;
     }
 
@@ -113,9 +122,12 @@ public class HistoriaClinicaService {
         DetalleHistoriaClinica detalle =
                 new DetalleHistoriaClinica();
 
+        Empleado profesional = obtenerProfesionalAutenticado();
+
         detalle.setHistoriaClinica(historiaClinica);
         detalle.setFecha(request.fecha());
         detalle.setObservaciones(request.observaciones());
+        detalle.setProfesional(profesional);
 
         DetalleHistoriaClinica guardado =
                 detalleRepository.save(detalle);
@@ -167,12 +179,40 @@ public class HistoriaClinicaService {
     private DetalleHistoriaClinicaResponse toDetalleResponse(
             DetalleHistoriaClinica detalle
     ) {
+        Empleado profesional = detalle.getProfesional();
+
         return new DetalleHistoriaClinicaResponse(
                 detalle.getId(),
                 detalle.getHistoriaClinica().getId(),
                 detalle.getFecha(),
-                detalle.getObservaciones()
+                detalle.getObservaciones(),
+                profesional != null ? profesional.getId() : null,
+                profesional != null ? profesional.getNombre() : null,
+                profesional != null ? profesional.getApellido() : null,
+                profesional != null ? profesional.getCargo().getNombre() : null
         );
+    }
+
+    private Empleado obtenerProfesionalAutenticado() {
+
+        Authentication authentication =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
+
+        if (authentication == null
+                || !(authentication.getPrincipal()
+                instanceof UsuarioPrincipal principal)) {
+            throw new AccessDeniedException("Acceso denegado");
+        }
+
+        if (principal.getEmpleadoId() == null) {
+            throw new ResourceNotFoundException(
+                    "El usuario autenticado no tiene empleado asociado"
+            );
+        }
+
+        return personalService.buscarEmpleadoPorId(principal.getEmpleadoId());
     }
 
     @Transactional(readOnly = true)

@@ -84,6 +84,14 @@ public class SecurityConfig {
                         ).authenticated()
 
                         // =========================
+                        // USUARIOS - ADMINISTRACIÃ“N
+                        // =========================
+
+                        .requestMatchers(
+                                "/usuarios/**"
+                        ).hasRole("ADMINISTRADOR")
+
+                        // =========================
                         // RESIDENTES - CONSULTA
                         // =========================
 
@@ -320,42 +328,12 @@ public class SecurityConfig {
                         )
 
                         // =========================
-                        // PERSONAL - CONSULTA
+                        // PERSONAL - ADMINISTRACION
                         // =========================
 
                         .requestMatchers(
-                                HttpMethod.GET,
                                 "/personal/**"
-                        ).hasAnyRole(
-                                "ADMINISTRADOR",
-                                "ADMINISTRATIVO"
-                        )
-
-                        // Personal - creación
-                        .requestMatchers(
-                                HttpMethod.POST,
-                                "/personal/**"
-                        ).hasAnyRole(
-                                "ADMINISTRADOR",
-                                "ADMINISTRATIVO"
-                        )
-
-                        // Personal - actualización
-                        .requestMatchers(
-                                HttpMethod.PUT,
-                                "/personal/**"
-                        ).hasAnyRole(
-                                "ADMINISTRADOR",
-                                "ADMINISTRATIVO"
-                        )
-
-                        .requestMatchers(
-                                HttpMethod.PATCH,
-                                "/personal/**"
-                        ).hasAnyRole(
-                                "ADMINISTRADOR",
-                                "ADMINISTRATIVO"
-                        )
+                        ).hasRole("ADMINISTRADOR")
 
                         // =========================
                         // REPORTES CLÍNICOS

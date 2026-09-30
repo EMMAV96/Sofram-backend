@@ -18,11 +18,15 @@ public class UsuarioPrincipal implements UserDetails {
     private final String rol;
 
     public UsuarioPrincipal(Usuario usuario) {
+        this(usuario, true);
+    }
+
+    public UsuarioPrincipal(Usuario usuario, boolean empleadoActivo) {
         this.id = usuario.getId();
         this.empleadoId = usuario.getEmpleadoId();
         this.username = usuario.getUsername();
         this.password = usuario.getPasswordHash();
-        this.activo = usuario.isActivo();
+        this.activo = usuario.isActivo() && empleadoActivo;
         this.rol = usuario.getRol().getNombre();
     }
 

@@ -7,6 +7,10 @@ public record DetalleHistoriaClinicaResponse(
         Long id,
         Long historiaClinicaId,
         LocalDate fecha,
-        String observaciones
+        String observaciones,
+        Long profesionalId,
+        String profesionalNombre,
+        String profesionalApellido,
+        String profesionalCargo
 ) {
 }
