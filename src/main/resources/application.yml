@@ -25,6 +25,18 @@ sofram:
     jwt:
       secret: ${JWT_SECRET}
       expiration-minutes: ${JWT_EXPIRATION_MINUTES:120}
+  bootstrap:
+    admin:
+      username: ${SOFRAM_ADMIN_USERNAME:}
+      password: ${SOFRAM_ADMIN_PASSWORD:}
+      nombre: ${SOFRAM_ADMIN_NOMBRE:Administrador}
+      apellido: ${SOFRAM_ADMIN_APELLIDO:Sistema}
+      dni: ${SOFRAM_ADMIN_DNI:00000000}
+      fecha-nacimiento: ${SOFRAM_ADMIN_FECHA_NACIMIENTO:1990-01-01}
+      email: ${SOFRAM_ADMIN_EMAIL:admin@sofram.local}
+      cargo-nombre: ${SOFRAM_ADMIN_CARGO_NOMBRE:Administrador del sistema}
+      cargo-sector: ${SOFRAM_ADMIN_CARGO_SECTOR:Administracion}
+      cargo-especialidad: ${SOFRAM_ADMIN_CARGO_ESPECIALIDAD:SOFRAM}
 
 springdoc:
   api-docs:

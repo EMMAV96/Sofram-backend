@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    url: ${SOFRAM_DATASOURCE_URL}
+    username: ${SOFRAM_DATASOURCE_USERNAME}
+    password: ${SOFRAM_DATASOURCE_PASSWORD}
+  flyway:
+    locations: classpath:db/migration,classpath:db/prod-migration
+
+sofram:
+  security:
+    jwt:
+      secret: ${SOFRAM_JWT_SECRET}
+      expiration-minutes: ${SOFRAM_JWT_EXPIRATION_MINUTES:120}
+  bootstrap:
+    admin:
+      username: ${SOFRAM_ADMIN_USERNAME}
+      password: ${SOFRAM_ADMIN_PASSWORD}

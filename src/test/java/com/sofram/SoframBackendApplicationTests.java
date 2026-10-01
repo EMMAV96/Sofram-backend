@@ -1,14 +1,19 @@
 package com.sofram;
 
+import com.sofram.auth.bootstrap.AdminBootstrapRunner;
+import com.sofram.auth.domain.Usuario;
+import com.sofram.auth.infrastructure.persistence.UsuarioRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.blankOrNullString;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -20,6 +25,15 @@ class SoframBackendApplicationTests {
 
 	@Autowired
 	private MockMvc mockMvc;
+
+	@Autowired
+	private UsuarioRepository usuarioRepository;
+
+	@Autowired
+	private PasswordEncoder passwordEncoder;
+
+	@Autowired
+	private AdminBootstrapRunner adminBootstrapRunner;
 
 	@Test
 	void contextLoads() {
@@ -53,7 +67,7 @@ class SoframBackendApplicationTests {
 						.content("""
 								{
 								  "username": "admin",
-								  "password": "admin123"
+								  "password": "TestAdmin!123"
 								}
 								"""))
 				.andExpect(status().isOk())
@@ -81,11 +95,35 @@ class SoframBackendApplicationTests {
 						.content("""
 								{
 								  "username": "admin",
-								  "password": "incorrecta"
+								  "password": "admin123"
 								}
 								"""))
 				.andExpect(status().isUnauthorized())
 				.andExpect(jsonPath("$.message").value("Credenciales invalidas"));
+	}
+
+	@Test
+	void bootstrapCreatesAdminWithBCryptPasswordAndIsIdempotent() throws Exception {
+		Usuario usuario = usuarioRepository.findByUsername("admin")
+				.orElseThrow();
+		String passwordHash = usuario.getPasswordHash();
+
+		assertThat(passwordHash).isNotEqualTo("TestAdmin!123");
+		assertThat(passwordHash).startsWith("$2");
+		assertThat(passwordEncoder.matches("TestAdmin!123", passwordHash))
+				.isTrue();
+		assertThat(usuarioRepository.countByRolNombre("ADMINISTRADOR"))
+				.isEqualTo(1);
+
+		adminBootstrapRunner.run(null);
+
+		Usuario usuarioLuegoDeReinicio = usuarioRepository
+				.findByUsername("admin")
+				.orElseThrow();
+		assertThat(usuarioLuegoDeReinicio.getPasswordHash())
+				.isEqualTo(passwordHash);
+		assertThat(usuarioRepository.countByRolNombre("ADMINISTRADOR"))
+				.isEqualTo(1);
 	}
 
 	@Test
@@ -164,7 +202,7 @@ class SoframBackendApplicationTests {
 						.content("""
 								{
 								  "username": "admin",
-								  "password": "admin123"
+								  "password": "TestAdmin!123"
 								}
 								"""))
 				.andExpect(status().isOk())
