@@ -11,6 +11,8 @@ sofram:
     jwt:
       secret: ${SOFRAM_JWT_SECRET}
       expiration-minutes: ${SOFRAM_JWT_EXPIRATION_MINUTES:120}
+    cors:
+      allowed-origins: ${SOFRAM_CORS_ALLOWED_ORIGINS}
   bootstrap:
     admin:
       username: ${SOFRAM_ADMIN_USERNAME}
