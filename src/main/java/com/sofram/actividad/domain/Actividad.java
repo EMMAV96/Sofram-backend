@@ -22,6 +22,9 @@ public class Actividad {
     @Column(nullable = false, length = 150)
     private String nombre;
 
+    @Column(length = 150)
+    private String taller;
+
     @Column(length = 2000)
     private String descripcion;
 
@@ -44,6 +47,7 @@ public class Actividad {
             DetalleCalendario detalleCalendario,
             Empleado empleado,
             String nombre,
+            String taller,
             String descripcion,
             String tipo,
             Integer duracion,
@@ -53,6 +57,7 @@ public class Actividad {
         this.detalleCalendario = detalleCalendario;
         this.empleado = empleado;
         this.nombre = nombre;
+        this.taller = taller;
         this.descripcion = descripcion;
         this.tipo = tipo;
         this.duracion = duracion;
@@ -74,6 +79,10 @@ public class Actividad {
 
     public String getNombre() {
         return nombre;
+    }
+
+    public String getTaller() {
+        return taller;
     }
 
     public String getDescripcion() {

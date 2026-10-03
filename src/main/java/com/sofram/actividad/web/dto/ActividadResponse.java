@@ -6,6 +6,7 @@ public record ActividadResponse(
         Long detalleCalendarioId,
         Long empleadoId,
         String nombre,
+        String taller,
         String descripcion,
         String tipo,
         Integer duracion,

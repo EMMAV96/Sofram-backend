@@ -14,6 +14,9 @@ public record ActividadRequest(
         @Size(max = 150)
         String nombre,
 
+        @Size(max = 150)
+        String taller,
+
         @Size(max = 2000)
         String descripcion,
 
