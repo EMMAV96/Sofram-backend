@@ -20,4 +20,6 @@ public interface ParticipacionActividadRepository
     );
 
     long countByActividadId(Long actividadId);
+
+    boolean existsByActividadId(Long actividadId);
 }

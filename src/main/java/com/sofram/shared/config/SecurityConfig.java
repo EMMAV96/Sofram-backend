@@ -315,6 +315,24 @@ public class SecurityConfig {
                                 "TERAPISTA_OCUPACIONAL"
                         )
 
+                        // Actividades - modificación
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/actividades/**"
+                        ).hasAnyRole(
+                                "ADMINISTRADOR",
+                                "TERAPISTA_OCUPACIONAL"
+                        )
+
+                        // Actividades - eliminación
+                        .requestMatchers(
+                                HttpMethod.DELETE,
+                                "/actividades/**"
+                        ).hasAnyRole(
+                                "ADMINISTRADOR",
+                                "TERAPISTA_OCUPACIONAL"
+                        )
+
                         // =========================
                         // PARTICIPACIÓN / ASISTENCIA
                         // =========================
@@ -335,6 +353,18 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/personal/**"
                         ).hasRole("ADMINISTRADOR")
+
+                        // =========================
+                        // REPORTES DE ACTIVIDADES
+                        // =========================
+
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/reportes/actividades/*/pdf"
+                        ).hasAnyRole(
+                                "ADMINISTRADOR",
+                                "TERAPISTA_OCUPACIONAL"
+                        )
 
                         // =========================
                         // REPORTES CLÍNICOS

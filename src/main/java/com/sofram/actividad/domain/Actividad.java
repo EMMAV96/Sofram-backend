@@ -65,6 +65,32 @@ public class Actividad {
         this.estado = estado;
     }
 
+    public void actualizar(
+            DetalleCalendario detalleCalendario,
+            Empleado empleado,
+            String nombre,
+            String taller,
+            String descripcion,
+            String tipo,
+            Integer duracion,
+            Integer cupoMaximo,
+            String estado
+    ) {
+        this.detalleCalendario = detalleCalendario;
+        this.empleado = empleado;
+        this.nombre = nombre;
+        this.taller = taller;
+        this.descripcion = descripcion;
+        this.tipo = tipo;
+        this.duracion = duracion;
+        this.cupoMaximo = cupoMaximo;
+        this.estado = estado;
+    }
+
+    public void cambiarEstado(String estado) {
+        this.estado = estado;
+    }
+
     public Long getId() {
         return id;
     }

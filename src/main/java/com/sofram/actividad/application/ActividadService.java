@@ -1,9 +1,11 @@
 package com.sofram.actividad.application;
 
+import com.sofram.auditoria.application.AuditoriaService;
 import com.sofram.auth.application.UsuarioPrincipal;
 import com.sofram.actividad.domain.Actividad;
 import com.sofram.actividad.domain.DetalleCalendario;
 import com.sofram.actividad.infrastructure.persistence.ActividadRepository;
+import com.sofram.actividad.infrastructure.persistence.ParticipacionActividadRepository;
 import com.sofram.actividad.web.dto.ActividadRequest;
 import com.sofram.actividad.web.dto.ActividadResponse;
 import com.sofram.personal.application.PersonalService;
@@ -21,18 +23,26 @@ import java.util.List;
 @Service
 public class ActividadService {
 
+    private static final String ESTADO_ELIMINADA = "ELIMINADA";
+
     private final ActividadRepository actividadRepository;
+    private final ParticipacionActividadRepository participacionRepository;
     private final CalendarioService calendarioService;
     private final PersonalService personalService;
+    private final AuditoriaService auditoriaService;
 
     public ActividadService(
             ActividadRepository actividadRepository,
+            ParticipacionActividadRepository participacionRepository,
             CalendarioService calendarioService,
-            PersonalService personalService
+            PersonalService personalService,
+            AuditoriaService auditoriaService
     ) {
         this.actividadRepository = actividadRepository;
+        this.participacionRepository = participacionRepository;
         this.calendarioService = calendarioService;
         this.personalService = personalService;
+        this.auditoriaService = auditoriaService;
     }
 
     @Transactional
@@ -62,8 +72,99 @@ public class ActividadService {
                 request.estado()
         );
 
-        return toResponse(
-                actividadRepository.save(actividad)
+        Actividad guardada = actividadRepository.save(actividad);
+
+        auditoriaService.registrar(
+                "CREAR",
+                "ACTIVIDADES",
+                "Actividad",
+                guardada.getId(),
+                "Creación de actividad"
+        );
+
+        return toResponse(guardada);
+    }
+
+    @Transactional
+    public ActividadResponse actualizar(
+            Long id,
+            ActividadRequest request
+    ) {
+
+        Actividad actividad = buscarEntidadPorId(id);
+
+        DetalleCalendario detalle =
+                calendarioService.buscarDetalleEntidadPorId(
+                        request.detalleCalendarioId()
+                );
+
+        Empleado empleado =
+                personalService.buscarEmpleadoPorId(
+                        request.empleadoId()
+                );
+        validarEmpleadoAutenticado(empleado.getId());
+        validarEmpleadoActivo(empleado);
+        validarCupoMaximoNoMenorAParticipantes(
+                actividad.getId(),
+                request.cupoMaximo()
+        );
+
+        actividad.actualizar(
+                detalle,
+                empleado,
+                request.nombre(),
+                request.taller(),
+                request.descripcion(),
+                request.tipo(),
+                request.duracion(),
+                request.cupoMaximo(),
+                request.estado()
+        );
+
+        Actividad actualizada = actividadRepository.save(actividad);
+
+        auditoriaService.registrar(
+                "ACTUALIZAR",
+                "ACTIVIDADES",
+                "Actividad",
+                actualizada.getId(),
+                "Actualización de actividad"
+        );
+
+        return toResponse(actualizada);
+    }
+
+    @Transactional
+    public void eliminar(Long id) {
+
+        Actividad actividad = buscarEntidadPorId(id);
+
+        validarEmpleadoAutenticado(
+                actividad.getEmpleado().getId()
+        );
+
+        if (participacionRepository.existsByActividadId(id)) {
+            actividad.cambiarEstado(ESTADO_ELIMINADA);
+            actividadRepository.save(actividad);
+
+            auditoriaService.registrar(
+                    "ELIMINAR_LOGICO",
+                    "ACTIVIDADES",
+                    "Actividad",
+                    actividad.getId(),
+                    "Baja lógica de actividad con participaciones"
+            );
+            return;
+        }
+
+        actividadRepository.delete(actividad);
+
+        auditoriaService.registrar(
+                "ELIMINAR",
+                "ACTIVIDADES",
+                "Actividad",
+                id,
+                "Eliminación física de actividad sin participaciones"
         );
     }
 
@@ -172,6 +273,21 @@ public class ActividadService {
         if (!empleado.isActivo()) {
             throw new BusinessRuleException(
                     "El empleado se encuentra dado de baja"
+            );
+        }
+    }
+
+    private void validarCupoMaximoNoMenorAParticipantes(
+            Long actividadId,
+            Integer cupoMaximo
+    ) {
+
+        long cantidadParticipantes =
+                participacionRepository.countByActividadId(actividadId);
+
+        if (cupoMaximo < cantidadParticipantes) {
+            throw new BusinessRuleException(
+                    "El cupo máximo no puede ser menor a la cantidad de participantes registrados"
             );
         }
     }

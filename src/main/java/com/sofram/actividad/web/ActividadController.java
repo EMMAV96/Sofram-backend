@@ -50,6 +50,27 @@ public class ActividadController {
         );
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<ActividadResponse> actualizar(
+            @PathVariable Long id,
+            @Valid @RequestBody ActividadRequest request
+    ) {
+
+        return ResponseEntity.ok(
+                actividadService.actualizar(id, request)
+        );
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(
+            @PathVariable Long id
+    ) {
+
+        actividadService.eliminar(id);
+
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/detalle-calendario/{detalleCalendarioId}")
     public ResponseEntity<List<ActividadResponse>>
     listarPorDetalleCalendario(
