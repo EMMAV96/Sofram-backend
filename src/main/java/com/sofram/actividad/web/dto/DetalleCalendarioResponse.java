@@ -9,6 +9,9 @@ public record DetalleCalendarioResponse(
         LocalDate fecha,
         LocalTime horaInicio,
         LocalTime horaFin,
-        String estado
+        String estado,
+        Long actividadId,
+        String actividadNombre,
+        String actividadTaller
 ) {
 }

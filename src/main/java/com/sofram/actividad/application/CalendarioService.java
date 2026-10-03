@@ -1,7 +1,9 @@
 package com.sofram.actividad.application;
 
+import com.sofram.actividad.domain.Actividad;
 import com.sofram.actividad.domain.Calendario;
 import com.sofram.actividad.domain.DetalleCalendario;
+import com.sofram.actividad.infrastructure.persistence.ActividadRepository;
 import com.sofram.actividad.infrastructure.persistence.CalendarioRepository;
 import com.sofram.actividad.infrastructure.persistence.DetalleCalendarioRepository;
 import com.sofram.actividad.web.dto.*;
@@ -9,20 +11,25 @@ import com.sofram.shared.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class CalendarioService {
 
     private final CalendarioRepository calendarioRepository;
     private final DetalleCalendarioRepository detalleRepository;
+    private final ActividadRepository actividadRepository;
 
     public CalendarioService(
             CalendarioRepository calendarioRepository,
-            DetalleCalendarioRepository detalleRepository
+            DetalleCalendarioRepository detalleRepository,
+            ActividadRepository actividadRepository
     ) {
         this.calendarioRepository = calendarioRepository;
         this.detalleRepository = detalleRepository;
+        this.actividadRepository = actividadRepository;
     }
 
     @Transactional
@@ -80,7 +87,8 @@ public class CalendarioService {
                 );
 
         return toDetalleResponse(
-                detalleRepository.save(detalle)
+                detalleRepository.save(detalle),
+                null
         );
     }
 
@@ -91,12 +99,22 @@ public class CalendarioService {
 
         buscarEntidadPorId(calendarioId);
 
-        return detalleRepository
+        List<DetalleCalendario> detalles = detalleRepository
                 .findByCalendarioIdOrderByFechaAscHoraInicioAsc(
                         calendarioId
-                )
+                );
+
+        Map<Long, Actividad> actividadesPorDetalle =
+                buscarActividadesPorDetalle(detalles);
+
+        return detalles
                 .stream()
-                .map(this::toDetalleResponse)
+                .map(detalle ->
+                        toDetalleResponse(
+                                detalle,
+                                actividadesPorDetalle.get(detalle.getId())
+                        )
+                )
                 .toList();
     }
 
@@ -114,7 +132,12 @@ public class CalendarioService {
                                 )
                         );
 
-        return toDetalleResponse(detalle);
+        return toDetalleResponse(
+                detalle,
+                actividadRepository
+                        .findFirstByDetalleCalendarioIdOrderByIdAsc(id)
+                        .orElse(null)
+        );
     }
 
     @Transactional(readOnly = true)
@@ -157,8 +180,34 @@ public class CalendarioService {
         );
     }
 
+    private Map<Long, Actividad> buscarActividadesPorDetalle(
+            List<DetalleCalendario> detalles
+    ) {
+        List<Long> detalleIds = detalles.stream()
+                .map(DetalleCalendario::getId)
+                .toList();
+
+        Map<Long, Actividad> actividadesPorDetalle = new HashMap<>();
+
+        if (detalleIds.isEmpty()) {
+            return actividadesPorDetalle;
+        }
+
+        actividadRepository
+                .findByDetalleCalendarioIdInOrderByIdAsc(detalleIds)
+                .forEach(actividad ->
+                        actividadesPorDetalle.putIfAbsent(
+                                actividad.getDetalleCalendario().getId(),
+                                actividad
+                        )
+                );
+
+        return actividadesPorDetalle;
+    }
+
     private DetalleCalendarioResponse toDetalleResponse(
-            DetalleCalendario detalle
+            DetalleCalendario detalle,
+            Actividad actividad
     ) {
         return new DetalleCalendarioResponse(
                 detalle.getId(),
@@ -166,7 +215,10 @@ public class CalendarioService {
                 detalle.getFecha(),
                 detalle.getHoraInicio(),
                 detalle.getHoraFin(),
-                detalle.getEstado()
+                detalle.getEstado(),
+                actividad != null ? actividad.getId() : null,
+                actividad != null ? actividad.getNombre() : null,
+                actividad != null ? actividad.getTaller() : null
         );
     }
 }
